@@ -5,7 +5,7 @@ const swiperRef = ref<HTMLElement>();
 const sliderContentRef = ref<HTMLElement>();
 const sliderItemRefs = ref<HTMLElement[]>([]);
 
-const activeIndex = ref(0);
+const GAP = 32;
 
 /** 是否正在拖拽 */
 let isDragging = false;
@@ -17,6 +17,8 @@ let currentX = 0;
 let startTime = 0;
 /** 内容偏移量 */
 let left = 0;
+
+const activeIndex = ref(0);
 
 /**
  * 开始拖拽
@@ -48,23 +50,26 @@ const end = (event: PointerEvent) => {
   const endTime = new Date().getTime() - startTime;
   const slide = startX - event.pageX;
   const slideSpeed = Math.abs(slide) / endTime;
+  const offsetWidth = sliderItemRefs.value[0].offsetWidth + GAP;
 
-  if (Math.abs(slide) > sliderItemRefs.value[0].offsetWidth / 2 || slideSpeed > 0.5) {
+  if (Math.abs(slide) > offsetWidth / 2 || slideSpeed > 0.5) {
     slide > 0 ? activeIndex.value++ : activeIndex.value--;
   }
 
   activeIndex.value = Math.max(0, Math.min(activeIndex.value, sliderItemRefs.value.length - 1));
-  left = -sliderItemRefs.value[activeIndex.value].offsetWidth * activeIndex.value;
+
+  left = -offsetWidth * activeIndex.value;
+
+  if (activeIndex.value === sliderItemRefs.value.length - 1) {
+    left += swiperRef.value!.offsetWidth - offsetWidth + GAP;
+  }
+
   sliderContentRef.value!.style.transition = `all 0.25s ease-out`;
   sliderContentRef.value!.style.transform = `translateX(${left}px)`;
 };
 
 onMounted(() => {
   sliderItemRefs.value = Array.from(sliderContentRef.value!.children) as HTMLElement[];
-  sliderItemRefs.value.forEach((el) => {
-    el.style.width = swiperRef.value!.offsetWidth + "px";
-    el.style.height = swiperRef.value!.offsetHeight + "px";
-  });
 });
 </script>
 
@@ -113,7 +118,6 @@ onMounted(() => {
     }
   }
 
-  /* pagination */
   .pagination {
     position: absolute;
     left: 50%;
