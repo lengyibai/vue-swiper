@@ -61,7 +61,7 @@ const end = (event: PointerEvent) => {
   left = -offsetWidth * activeIndex.value;
 
   if (activeIndex.value === sliderItemRefs.value.length - 1) {
-    left += swiperRef.value!.offsetWidth - offsetWidth + GAP;
+    left += swiperRef.value!.offsetWidth - offsetWidth - GAP;
   }
 
   sliderContentRef.value!.style.transition = `all 0.25s ease-out`;

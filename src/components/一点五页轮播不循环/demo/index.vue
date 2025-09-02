@@ -10,11 +10,6 @@ import Swiper from "../index.vue";
       <div class="slider-item">2</div>
       <div class="slider-item">3</div>
       <div class="slider-item">4</div>
-      <div class="slider-item">0</div>
-      <div class="slider-item">1</div>
-      <div class="slider-item">2</div>
-      <div class="slider-item">3</div>
-      <div class="slider-item">4</div>
     </Swiper>
   </div>
 </template>
@@ -37,6 +32,10 @@ import Swiper from "../index.vue";
     font-size: 50px;
     background-color: #fff;
     user-select: none;
+
+    &:first-child {
+      margin-left: 32px;
+    }
   }
 }
 </style>
