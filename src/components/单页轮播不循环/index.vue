@@ -1,15 +1,5 @@
 <script setup lang="ts">
-import { libJsRandomColor } from "lyb-js/Random/LibJsRandomColor.js";
 import { onMounted, ref } from "vue";
-
-interface Props {
-  data: number[];
-  /** 一页个数 */
-  pageNum: number;
-}
-const $props = withDefaults(defineProps<Props>(), {
-  pageNum: 5,
-});
 
 const swiperRef = ref<HTMLElement>();
 const sliderContentRef = ref<HTMLElement>();
@@ -30,9 +20,9 @@ let left = 0;
 
 /**
  * 开始拖拽
- * @param event PointerEvent
  */
 const start = (event: PointerEvent) => {
+  (event.target as HTMLElement).setPointerCapture?.((event as any).pointerId);
   isDragging = true;
   startX = currentX = event.pageX;
   startTime = new Date().getTime();
@@ -41,7 +31,6 @@ const start = (event: PointerEvent) => {
 
 /**
  * 拖拽移动
- * @param event PointerEvent
  */
 const move = (event: PointerEvent) => {
   if (!isDragging) return;
@@ -52,7 +41,6 @@ const move = (event: PointerEvent) => {
 
 /**
  * 结束拖拽
- * @param event PointerEvent
  */
 const end = (event: PointerEvent) => {
   if (!isDragging) return;
@@ -63,33 +51,40 @@ const end = (event: PointerEvent) => {
   if (Math.abs(slide) > sliderItemRefs.value[0].offsetWidth / 2 || slideSpeed > 1) {
     slide > 0 ? activeIndex.value++ : activeIndex.value--;
   }
-  activeIndex.value = Math.max(0, Math.min(activeIndex.value, $props.data.length - 1));
+  activeIndex.value = Math.max(0, Math.min(activeIndex.value, sliderItemRefs.value.length - 1));
   left = -sliderItemRefs.value[0].offsetWidth * activeIndex.value;
   sliderContentRef.value!.style.transition = `all 0.25s`;
   sliderContentRef.value!.style.transform = `translateX(${left}px)`;
 };
 
 onMounted(() => {
+  sliderItemRefs.value = Array.from(sliderContentRef.value!.children) as HTMLElement[];
   sliderItemRefs.value.forEach((el) => {
-    el.style.width = swiperRef.value!.offsetWidth / $props.pageNum + "px";
+    el.style.width = swiperRef.value!.offsetWidth + "px";
     el.style.height = swiperRef.value!.offsetHeight + "px";
   });
 });
 </script>
 
 <template>
-  <div ref="swiperRef" class="swiper" @pointerdown="start" @pointermove="move" @pointerup="end">
+  <div
+    ref="swiperRef"
+    class="swiper"
+    @pointerdown="start"
+    @pointercancel="end"
+    @pointerleave="end"
+    @pointermove="move"
+    @pointerup="end"
+  >
     <div class="swiper-container">
       <div ref="sliderContentRef" class="slider-content">
-        <div v-for="(el, index) in data" ref="sliderItemRefs" :key="index" class="slider-item">
-          {{ el }}
-        </div>
+        <slot />
       </div>
     </div>
 
     <div class="pagination">
       <span
-        v-for="(_, index) in $props.data.length"
+        v-for="(_, index) in sliderItemRefs.length"
         :key="index"
         :class="{ active: activeIndex === index }"
       ></span>
@@ -113,36 +108,6 @@ onMounted(() => {
       position: relative;
       display: flex;
       height: 100%;
-
-      .slider-item {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-        font-size: 50px;
-        background-color: var(--blue);
-        user-select: none;
-
-        &:nth-child(1) {
-          background-color: var(--red);
-        }
-
-        &:nth-child(2) {
-          background-color: var(--yellow);
-        }
-
-        &:nth-child(3) {
-          background-color: var(--green);
-        }
-
-        &:nth-child(4) {
-          background-color: var(--orange);
-        }
-
-        &:nth-child(5) {
-          background-color: var(--purple);
-        }
-      }
     }
   }
 
