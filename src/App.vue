@@ -17,10 +17,5 @@ import Index from "./components/单页循环/demo/index.vue";
   align-items: center;
   width: 100%;
   height: 100%;
-
-  .container {
-    width: 50%;
-    height: 50%;
-  }
 }
 </style>

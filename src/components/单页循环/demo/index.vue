@@ -9,6 +9,9 @@ import Swiper from "../index.vue";
         { id: 1, value: 'a' },
         { id: 2, value: 'b' },
         { id: 3, value: 'c' },
+        { id: 4, value: 'd' },
+        { id: 5, value: 'e' },
+        { id: 6, value: 'f' },
       ]"
     />
   </div>
@@ -16,8 +19,8 @@ import Swiper from "../index.vue";
 
 <style scoped lang="less">
 .container {
-  width: 100%;
-  height: 100%;
+  width: 600px;
+  height: 200px;
   border: 1px solid #fff;
 }
 </style>
