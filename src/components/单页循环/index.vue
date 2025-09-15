@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, shallowReactive } from "vue";
+import { onMounted, onUnmounted, ref, shallowReactive } from "vue";
 
 interface Props {
   data: Array<{ id: string | number; value: string }>;
@@ -13,65 +13,68 @@ const sliderItemRefs = ref<HTMLElement[]>([]);
 const activeIndex = ref(0);
 const list = shallowReactive([...$props.data]);
 
-/** 是否正在拖拽 */
 let isDragging = false;
-/** 起始触摸点 X */
 let startX = 0;
-/** 当前触摸点 X */
 let currentX = 0;
-/** 拖拽开始时间戳 */
 let startTime = 0;
-/** 内容偏移量 */
 let left = 0;
 
-/**
- * 开始拖拽
- */
-const start = (event: PointerEvent) => {
-  (event.target as HTMLElement).setPointerCapture?.((event as any).pointerId);
-  isDragging = true;
-  startX = currentX = event.pageX;
-  startTime = new Date().getTime();
-  sliderContentRef.value!.style.transition = "none";
-};
-
-/**
- * 拖拽移动
- */
 const move = (event: PointerEvent) => {
-  const width = swiperRef.value!.offsetWidth;
   if (!isDragging) return;
+  const width = swiperRef.value!.offsetWidth;
+
   left += event.pageX - currentX;
   currentX = event.pageX;
 
-  console.log(left);
-  // 拖拽到最左边 -> 将最后一项放到最前面
-  if (left >= 0) {
+  if (left < -width) {
+    list.push(list.shift()!);
+    left += width;
+    activeIndex.value = (activeIndex.value + 1) % $props.data.length;
+  } else if (left > 0) {
     list.unshift(list.pop()!);
-    left = -width;
+    left -= width;
+    activeIndex.value = (activeIndex.value - 1 + $props.data.length) % $props.data.length;
   }
 
   sliderContentRef.value!.style.transform = `translateX(${left}px)`;
 };
 
-/**
- * 结束拖拽
- */
 const end = (event: PointerEvent) => {
   if (!isDragging) return;
   isDragging = false;
-  const endTime = new Date().getTime() - startTime;
+
+  const width = swiperRef.value!.offsetWidth;
+  const endTime = Date.now() - startTime;
   const slide = startX - event.pageX;
   const slideSpeed = Math.abs(slide) / endTime;
 
   if (Math.abs(slide) > sliderItemRefs.value[0].offsetWidth / 2 || slideSpeed > 0.5) {
-    slide > 0 ? activeIndex.value++ : activeIndex.value--;
+    if (slide > 0) {
+      activeIndex.value = (activeIndex.value + 1) % $props.data.length;
+      left = -width;
+    } else {
+      activeIndex.value = (activeIndex.value - 1 + $props.data.length) % $props.data.length;
+      left = 0;
+    }
+  } else {
+    left = 0;
   }
 
-  activeIndex.value = Math.max(0, Math.min(activeIndex.value, sliderItemRefs.value.length - 1));
-  left = -sliderItemRefs.value[activeIndex.value].offsetWidth * activeIndex.value;
-  sliderContentRef.value!.style.transition = `all 0.25s ease-out`;
+  sliderContentRef.value!.style.transition = "all 0.25s ease-out";
   sliderContentRef.value!.style.transform = `translateX(${left}px)`;
+
+  window.removeEventListener("pointermove", move);
+  window.removeEventListener("pointerup", end);
+};
+
+const start = (event: PointerEvent) => {
+  isDragging = true;
+  startX = currentX = event.pageX;
+  startTime = Date.now();
+  sliderContentRef.value!.style.transition = "none";
+
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", end);
 };
 
 onMounted(() => {
@@ -81,18 +84,15 @@ onMounted(() => {
     el.style.height = swiperRef.value!.offsetHeight + "px";
   });
 });
+
+onUnmounted(() => {
+  window.removeEventListener("pointermove", move);
+  window.removeEventListener("pointerup", end);
+});
 </script>
 
 <template>
-  <div
-    ref="swiperRef"
-    class="swiper"
-    @pointerdown="start"
-    @pointercancel="end"
-    @pointerleave="end"
-    @pointermove="move"
-    @pointerup="end"
-  >
+  <div ref="swiperRef" class="swiper" @pointerdown="start">
     <div class="swiper-container">
       <div ref="sliderContentRef" class="slider-content">
         <div v-for="item in list" :key="item.id" class="slider-item">
@@ -119,7 +119,7 @@ onMounted(() => {
 
   .swiper-container {
     position: relative;
-    // overflow: hidden;
+    overflow: hidden;
     width: 100%;
     height: 100%;
 
