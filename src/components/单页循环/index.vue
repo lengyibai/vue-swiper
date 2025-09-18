@@ -19,6 +19,16 @@ let currentX = 0;
 let startTime = 0;
 let left = 0;
 
+const start = (event: PointerEvent) => {
+  isDragging = true;
+  startX = currentX = event.pageX;
+  startTime = Date.now();
+  sliderContentRef.value!.style.transition = "none";
+
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", end);
+};
+
 const move = (event: PointerEvent) => {
   if (!isDragging) return;
   const width = sliderItemRefs.value[0].offsetWidth;
@@ -48,17 +58,29 @@ const end = (event: PointerEvent) => {
   const slide = startX - event.pageX;
   const slideSpeed = Math.abs(slide) / endTime;
 
+  debugger;
+  //如果移动的距离大于item的宽度的一半或者移动速度大于0.5
   if (Math.abs(slide) > sliderItemRefs.value[0].offsetWidth / 2 || slideSpeed > 0.5) {
+    //如果是向左移动，则跳转到下一页
     if (slide > 0) {
+      left = -width;
+      activeIndex.value = 2;
+    }
+    //如果是向右移动，则跳转到上一页
+    else {
+      left = 0;
+      activeIndex.value = 1;
+    }
+  }
+  //还原位置
+  else {
+    if (slide < 0) {
       left = -width;
       activeIndex.value = 2;
     } else {
       left = 0;
       activeIndex.value = 1;
     }
-  } else {
-    left = 0;
-    activeIndex.value = 1;
   }
 
   sliderContentRef.value!.style.transition = "all 0.25s ease-out";
@@ -66,16 +88,6 @@ const end = (event: PointerEvent) => {
 
   window.removeEventListener("pointermove", move);
   window.removeEventListener("pointerup", end);
-};
-
-const start = (event: PointerEvent) => {
-  isDragging = true;
-  startX = currentX = event.pageX;
-  startTime = Date.now();
-  sliderContentRef.value!.style.transition = "none";
-
-  window.addEventListener("pointermove", move);
-  window.addEventListener("pointerup", end);
 };
 
 onMounted(() => {
@@ -115,7 +127,7 @@ onUnmounted(() => {
 
   .swiper-container {
     position: relative;
-    overflow: hidden;
+    // overflow: hidden;
     width: 100%;
     height: 100%;
 

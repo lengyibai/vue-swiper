@@ -21,6 +21,6 @@ import Swiper from "../index.vue";
 .container {
   width: 600px;
   height: 200px;
-  border: 1px solid #fff;
+  border: 5px solid #fff;
 }
 </style>
